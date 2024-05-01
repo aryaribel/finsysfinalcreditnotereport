@@ -894,7 +894,15 @@ urlpatterns = [
     path('Fin_share_sales_order_details_report_to_email',views.Fin_shareSalesOrderDetailsReportToEmail, name='Fin_shareSalesOrderDetailsReportToEmail'),
     # End
 
-    
+
+
+    path('Fin_creditnoteReport',views.Fin_creditnoteReport, name='Fin_creditnoteReport'),
+    path('Fin_creditnoteReportCustomized',views.Fin_creditnoteReportCustomized, name='Fin_creditnoteReportCustomized'),
+    path('Fin_sharecreditnoteReportToEmail',views.Fin_sharecreditnoteReportToEmail, name='Fin_sharecreditnoteReportToEmail'),
+
+
+
+
     re_path(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
