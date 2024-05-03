@@ -33985,6 +33985,8 @@ def Fin_shareSalesOrderDetailsReportToEmail(request):
       
 
 
+#--------Arya E.R---Credit note details------#
+
 def Fin_creditnoteReport(request):
     if 's_id' in request.session:
         s_id = request.session['s_id']
@@ -34064,39 +34066,95 @@ def Fin_creditnoteReport(request):
 def Fin_creditnoteReportCustomized(request):
     if 's_id' in request.session:
         s_id = request.session['s_id']
-        data = Fin_Login_Details.objects.get(id = s_id)
+        data = Fin_Login_Details.objects.get(id=s_id)
         if data.User_Type == "Company":
-            com = Fin_Company_Details.objects.get(Login_Id = s_id)
+            com = Fin_Company_Details.objects.get(Login_Id=s_id)
             cmp = com
         else:
-            com = Fin_Staff_Details.objects.get(Login_Id = s_id)
+            com = Fin_Staff_Details.objects.get(Login_Id=s_id)
             cmp = com.company_id
         
-        allmodules = Fin_Modules_List.objects.get(company_id = cmp,status = 'New')
-        cred = Fin_CreditNote.objects.filter(Company = cmp)
+        allmodules = Fin_Modules_List.objects.get(company_id=cmp, status='New')
+        cred = Fin_CreditNote.objects.filter(Company=cmp)
+
 
 
         if request.method == 'GET':
             trans = request.GET['transactions']
             startDate = request.GET['from_date']
             endDate = request.GET['to_date']
-            if trans:
-                cred = cred.filter(status = trans)
-            if startDate:
-                cred = cred.filter(creditnote_date__gte = startDate)
-            if endDate:
-                cred = cred.filter(creditnote_date__lte = endDate)   
+            if startDate == "":
+                startDate = None
+            if endDate == "":
+                endDate = None
+            
+
+            reportData = []
+            totInv = 0
+            totRecInv = 0
+            totCrdNote = 0
+            count = 0
+            subTot = 0
+            subTotWOCrd = 0
+            cust = Fin_Customers.objects.filter(Company=cmp)
 
 
+           
+
+            if startDate == None or endDate == None:
+                    if trans == "all":
+                       
+                        cred = Fin_CreditNote.objects.filter(Company=cmp)
+                    elif trans == 'Saved':
+                        cred = Fin_CreditNote.objects.filter(status = 'Saved')
+
+                        
+                    elif trans == 'Draft':
+                        cred = Fin_CreditNote.objects.filter(status = 'Draft')
+                  
+
+                        
+            else:
+                     
+                    if trans == 'all':
+                        cred = Fin_CreditNote.objects.filter(Company=cmp, creditnote_date__range = [startDate, endDate])
+                    elif trans == 'Saved':
+                        cred = Fin_CreditNote.objects.filter(Company=cmp, creditnote_date__range = [startDate, endDate], status = 'Saved')
+
+                       
+                    elif trans == 'Draft':
+                        cred = Fin_CreditNote.objects.filter(Company=cmp, creditnote_date__range = [startDate, endDate], status = 'Draft')
+
+            if cred:
+                    count += len(cred)
+                    for n in cred:
+                        totCrdNote += float(n.grandtotal)
+
+            details = {
+                    'count':count,
+            }
+
+            reportData.append(details)
+
+            totCust = len(cust)
+           
+
+           
 
             context = {
-                'allmodules':allmodules, 'com':com, 'cmp':cmp, 'data':data,'creditNotes':cred,
+                'allmodules':allmodules, 'com':com, 'cmp':cmp, 'data':data,'creditNotes':cred,'totalCustomers':totCust,
                
-                'startDate':startDate, 'endDate':endDate, 'transaction':trans,
+                'startDate':startDate, 'endDate':endDate, 'transaction':trans,'totalCreditNote': totCrdNote,'reportData':reportData,
+                
             }
-            return render(request,'company/reports/Fin_creditnotereport.html', context)
+
+      
+            return render(request, 'company/reports/Fin_creditnotereport.html', context)
     else:
-        return redirect('/')
+        return redirect('/')        
+
+
+
 
 def Fin_sharecreditnoteReportToEmail(request):
     if 's_id' in request.session:
@@ -34117,34 +34175,90 @@ def Fin_sharecreditnoteReportToEmail(request):
 
                 emails_string = request.POST['email_ids']
 
-                # Split the string by commas and remove any leading or trailing whitespace
                 emails_list = [email.strip() for email in emails_string.split(',')]
                 email_message = request.POST['email_message']
-                # print(emails_list)
             
                 trans = request.POST['transaction']
                 startDate = request.POST['start']
                 endDate = request.POST['end']
-                if trans:
-                    cred = cred.filter(status = trans)
-                if startDate:
-                    cred = cred.filter(creditnote_date__gte = startDate)
-                if endDate:
-                    cred = cred.filter(creditnote_date__lte = endDate)   
+                if startDate == "":
+                    startDate = None
+                if endDate == "":
+                    endDate = None
+
+                  
+
+                reportData = []
+                totInv = 0
+                totRecInv = 0
+                totCrdNote = 0
+                subTot = 0
+                subTotWOCrd = 0
+
+                cust = Fin_Customers.objects.filter(Company=com)
+
+                for c in cust:
+                    customerName = c.first_name +" "+c.last_name
+                    count = 0
+                    sales = 0
+
+                    if startDate == None or endDate == None:
+                        if trans == "all":
+                           
+                            cred = Fin_CreditNote.objects.filter(Company=cmp)
+                        elif trans == 'Saved':
+                            cred = Fin_CreditNote.objects.filter(status = 'Saved')
+
+                            
+                        elif trans == 'Draft':
+                            cred = Fin_CreditNote.objects.filter(status = 'Draft')
+
+                          
+                       
+                    else:
+                        if trans == 'all':
+                            cred = Fin_CreditNote.objects.filter(Company=cmp, creditnote_date__range = [startDate, endDate])
+                        elif trans == 'Saved':
+                            cred = Fin_CreditNote.objects.filter(Company=cmp, creditnote_date__range = [startDate, endDate], status = 'Saved')
+
+                           
+                        elif trans == 'Draft':
+                            cred = Fin_CreditNote.objects.filter(Company=cmp, creditnote_date__range = [startDate, endDate], status = 'Draft')
+
+                                                                 
+                    
+                    if cred:
+                        count += len(cred)
+                        for n in cred:
+                            totCrdNote += float(n.grandtotal)
+
+                    details = {
+                        'name': customerName,
+                        'count':count,
+                        'sales':sales
+                    }
+
+                    reportData.append(details)
+
+                totCust = len(cust)
+                totSale = totInv + totRecInv - totCrdNote
+                totSaleWOCrdNote = totInv + totRecInv
+              
 
                 
             
-                context = {'creditNotes':cred,'cmp':com, 'startDate':startDate, 'endDate':endDate}
-                template_path = 'company/reports/Fin_Sales_by_customer_Pdf.html'
+                context = {'creditNotes':cred,'cmp':com, 'startDate':startDate,'endDate':endDate,'totalCreditNote': totCrdNote,
+                'reportData': reportData,'totalCustomers': totCust, 'transaction': trans,}
+                template_path = 'company/reports/Fin_creditnotereport_pdf.html'
                 template = get_template(template_path)
 
                 html  = template.render(context)
                 result = BytesIO()
                 pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
                 pdf = result.getvalue()
-                filename = f'Report_SalesByCustomer'
-                subject = f"Report_SalesByCustomer"
-                email = EmailMessage(subject, f"Hi,\nPlease find the attached Report for - Sales By Customer. \n{email_message}\n\n--\nRegards,\n{com.Company_name}\n{com.Address}\n{com.State} - {com.Country}\n{com.Contact}", from_email=settings.EMAIL_HOST_USER, to=emails_list)
+                filename = f'Report_Creditnote'
+                subject = f"Report_Creditnote"
+                email = EmailMessage(subject, f"Hi,\nPlease find the attached Report for - Creditnote. \n{email_message}\n\n--\nRegards,\n{com.Company_name}\n{com.Address}\n{com.State} - {com.Country}\n{com.Contact}", from_email=settings.EMAIL_HOST_USER, to=emails_list)
                 email.attach(filename, pdf, "application/pdf")
                 email.send(fail_silently=False)
 
@@ -34153,4 +34267,7 @@ def Fin_sharecreditnoteReportToEmail(request):
         except Exception as e:
             print(e)
             messages.error(request, f'{e}')
-            return redirect(Fin_creditnoteReport)        
+            return redirect(Fin_creditnoteReport)  
+
+#------End---------------#
+                

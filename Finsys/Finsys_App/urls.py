@@ -895,10 +895,13 @@ urlpatterns = [
     # End
 
 
+    # < ------------- Arya E.R -------- > Reports - Credit note details < ------------------------------- >
 
     path('Fin_creditnoteReport',views.Fin_creditnoteReport, name='Fin_creditnoteReport'),
     path('Fin_creditnoteReportCustomized',views.Fin_creditnoteReportCustomized, name='Fin_creditnoteReportCustomized'),
     path('Fin_sharecreditnoteReportToEmail',views.Fin_sharecreditnoteReportToEmail, name='Fin_sharecreditnoteReportToEmail'),
+    
+    # End
 
 
 
